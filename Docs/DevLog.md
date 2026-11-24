@@ -136,3 +136,108 @@ Done means (output format):
 - Rejected (and why): Deferred installing `unity setup antigravity` for now; kept commits, pushes, and Unity terms acceptance manual.
 - How I verified it: Reading CLAUDE.md, confirming HW1's Docs/ are in E:\AIForGames\DASHBLADE\Docs\, enabling main branch protection on GitHub, and running git status before committing to confirm Library/, Logs/, UserSettings/, and .vscode/ are ignored
 - Time spent: around 1 hour
+
+## 2026-11-24 · Session 3 · Specs for F01–F07 and prototype build with subagents
+
+> AI-drafted during the session, at my request. I still have to check and correct every line, and write "How I verified it" and "Time spent" myself. Lines marked TODO are mine to fill in. The build status list at the end is updated as each feature finishes.
+
+- Goal: Start Home Assignment 02: agree a build order for F01–F07, write one spec per feature by interview before it is built, then have the features built one at a time and reviewed against their specs.
+- Model: Claude Mythos 5.2 in Claude Code (desktop app) as the orchestrator that interviewed me, wrote the specs and reviewed the builds. Build and rules-drafting subagents were launched with the `opus` model setting at high effort, as I asked ("Opus 5.5 on high").
+- Key prompts:
+  - First prompt (spec session for F01):
+
+    > Role:
+    > You are a disciplined Unity 6.3 developer and spec writer helping me start Home Assignment 02 (Prototype) for my solo semester project game, DASHBLADE.
+    >
+    > Context:
+    > - CLAUDE.md in the project root holds the project rules. Follow it.
+    > - Read these first, before asking me anything:
+    >   - Docs/HLD.md (target experience, core loop, features F01-F08)
+    >   - Docs/Backlog.md
+    >   - Docs/Specs/SPEC-template.md (the spec format to use)
+    >   - E:\AIForGames\lesson04\context-kit\example\example-spec-health-pickup.md (an example of a finished spec)
+    > - Home Assignment 02 needs F01-F07 playable from main menu to victory or defeat with placeholder shapes, one spec per feature written before it is built, a Windows build, and committed work.
+    > - The project is a fresh Universal 2D template: only SampleScene exists and there is no game code yet.
+    >
+    > Task:
+    > 1. After reading, give me a short build order for F01-F07, one line each, with the reason for the order. Respect the backlog: the dash (F02) is the riskiest Must and must be proven early on a small placeholder test.
+    > 2. Then interview me about F01 Movement and aim only. Ask one question at a time and wait for my answer. Offer 2-3 options where that helps me decide. Keep going until you could write a spec with a goal, acceptance criteria, edge cases, examples and out of scope.
+    > 3. Write the spec to Docs/Specs/F01-movement-and-aim.md from the template.
+    >
+    > 4. In case any asset you need that I have not provided or located in project folder, make it a place holder and let me know what assets are placeholders so I can provide it to you later on.
+    >
+    > Constraints:
+    > - Write no code and change nothing in Unity in this session. The only file you create is the F01 spec.
+    > - Do not edit Docs/DevLog.md, Docs/HLD.md or Docs/Backlog.md.
+    > - Every acceptance criterion must be testable in Play Mode and contain a real number: a starting state, one action, what I see.
+    > - Tie the goal to the target experience in the HLD.
+    > - Edge cases must cover the situations where you would otherwise guess (for example: no input, diagonal input, mouse on top of the player, mouse outside the window, arena walls).
+    > - Do not invent a value I have not given you. Ask me, or mark it [?] in the spec.
+    > - Anything beyond F01 (dash, enemies, health, HUD, menus) goes under "Out of scope".
+    > - Never commit or push.
+    >
+    > Done means:
+    > 1. Docs/Specs/F01-movement-and-aim.md exists and follows every section of the template.
+    > 2. A numbered list of every [?] left in the spec for me to answer.
+    > 3. A list of every decision I made during the interview, so I can check the spec against it.
+    > 4. Stop there. I will review the spec, then build it in a fresh session.
+
+  - Second prompt (changing from "build in a fresh session" to building here with subagents):
+
+    > I approve the plan after reading it. also, i have added a folder with assets to use (made using Chatgpt instructed to make sheets of assets), path : /E:/AIForGames/DASHBLADE/Assets/_Game/Art/SpriteSheets
+    >
+    > To work on it, I require you to be the orchestrator, use sub agents of Opus 5.5 on high, to work on the features and they report back to you to review and you can interview me on the reports if anything seemed off the plan.
+
+  - Third prompt: "Start interview for all F02 - F07 , once each interview is done, start subagent for it and continue interview me for the next"
+  - Fourth prompt (sent mid-interview): "btw run paralel agents when possible on scripts or features that dont interfere"
+  - Fifth prompt: "Once the subagent of F02 finish, continue the rest. also make sure to log everything needed in devlog."
+- What the AI produced:
+  - A build order for F01–F07 (F01, F02, F03, F04, F05, F06, F07), with the dash second so the riskiest Must is proven on a small test before real enemies exist.
+  - Seven specs in `Docs/Specs/`, each written from an interview where I picked from 2–3 options or typed my own answer: `F01-movement-and-aim.md`, `F02-dash-attack-and-kill-recharge.md`, `F03-hearts-and-damage-protection.md`, `F04-charger-and-turret.md`, `F05-arena-and-three-waves.md`, `F06-menus-and-endings.md`, `F07-basic-hud-and-windows-build.md`. F01 first had five `[?]` values, which I answered before it was built; none of the seven specs has an open value now.
+  - F01 built by a subagent through the Unity CLI: scripts in `Assets/_Game/Scripts/Player/` and `Assets/_Game/Scripts/Display/`, Edit Mode tests in `Assets/_Game/Tests/EditMode/`, `Assets/_Game/Config/PlayerConfig.asset`, `Assets/_Game/Physics/PlayerFrictionless.physicsMaterial2D` and a new scene `Assets/_Game/Scenes/Arena.unity` (placeholder player, walls, door marker, fixed letterboxed camera).
+  - Checks the AI ran on F01 (these are the AI's checks, not my verification): 29 Edit Mode tests passed; the subagent injected keyboard and mouse state in Play Mode and measured the acceptance criteria; the orchestrator re-ran the tests, read the code, read the scene values through the CLI and looked at Play Mode captures. The AI reported three things it could not check: the 1920 × 1080 Game view, the 4:3 letterbox, and a real Alt+Tab while holding a key.
+  - Side effects reported by the AI: Unity upgraded `Assets/Settings/UniversalRP.asset` (asset version 12 to 13) and created `ProjectSettings/SceneTemplateSettings.json` on its own.
+  - Rules code for F03, F04 and F05 (plain C# classes with NUnit tests) drafted by parallel subagents in a temporary staging folder outside the project while the Editor was busy with F02, and compiled and tested outside Unity (39, 83 and 94 tests passing as reported). It is not in the project until each feature's build moves it in.
+  - Build status at the time of writing: see the list at the end of this entry.
+- Accepted:
+  - The build order.
+  - F01: instant start and stop, 1-unit player, 6 units/second, normalised diagonals, opposite keys cancel, whole body turns and snaps to the mouse, 0.5-unit aim dead zone, slide along walls at the natural 4.24, fixed camera, 24 × 12 test area with 1-unit walls, new `Arena` scene, white circle with red nose, screen-relative WASD, stop on focus loss.
+  - F02: the backlog's plan B path check from the start, 5 units in 0.15 seconds, pass through and kill every enemy on the path, input ignored during the dash, early clicks ignored, constant speed on a shortened dash, a blocked dash counts as a miss, nose colour as the readiness signal, four test dummies in a row, invulnerability flag now and the damage check in F03.
+  - F03: 1 heart per hit, body blinks while protected, hearts read in the Inspector until the HUD, orange test hazard zone, hit again as soon as protection ends, hit on the frame a dash ends in danger, controls stop and the body fades at 0 hearts, a right-click "Restore Hearts" for testing.
+  - F04: 1-second lane warning, charge runs to the first wall at 15 units/second, 1.5-second rest, Charger stays where it stopped and only hurts while charging, 0.8-second ring warning, Turret aims when it fires, 1.5 seconds between shots, shots already flying carry on after the Turret dies, 1-second first-attack delay, lane that fills up, shrinking ring, triangle / hexagon / small circle placeholders, old test objects moved to a test scene.
+  - F05: 3 Chargers, then 3 Turrets, then 2 + 2; 2-second pause before every wave; player not moved between waves; layout chosen once per run; victory leaves the player in control.
+  - F06: separate `MainMenu` and `Arena` scenes, controls always visible on the menu, ending panel over the dimmed arena after 1 second, game frozen behind the panel, Quit stops Play Mode in the Editor, Esc does nothing, the proposed wording.
+  - F07: HUD along the top wall, filled and hollow squares for hearts, refilling cyan dash bar, nose signal kept as well, "Wave 1 / 3", fullscreen release build in `Builds/Windows`, built by the agent.
+- Changed (and why): TODO: check each line and add my reasons.
+  - I first planned to build F01 in a fresh session, then had the same session orchestrate subagents instead.
+  - F01 start position: I replaced the offered options with a spawn point next to a door (door marker on the left wall, spawn 1.5 units inside it).
+  - F01 input: I added the arrow keys as an alternative to WASD (the HLD lists WASD only).
+  - F01 aspect ratio: I chose to letterbox to 16:9, which added work to F01.
+  - F02 hit width: I set 1.25 units, between the two options offered (1 and 1.5).
+  - F02 miss cooldown: I chose 1 second.
+  - F02 enemy death: I asked for enemies to fade out as if destroyed (0.3 seconds), not vanish.
+  - F03 protection time: I chose 0.75 seconds.
+  - F04 lane: I chose a lane that follows the player and then locks for the last 0.4 seconds.
+  - F04 projectile speed: I chose 7 units/second, faster than walking.
+  - F04 enemy bodies: I asked for solid enemies with a way out when stuck at a wall or corner (an enemy overlapping the player does not block until they separate).
+  - F04 dash against shots: I chose that a dash destroys a shot without it counting as a kill.
+  - F05 arena: I asked for a bigger arena (32 × 18, camera zoomed out to size 10) with six 2 × 2 pillars per run, picked at random from three hand-made layouts. This differs from the HLD (procedural levels out of scope) and the backlog's dash plan B (open arena without obstacles); the HLD and backlog are not updated yet.
+  - F05 arrival: I chose enemies fading in over 0.5 seconds.
+  - Working method: I asked for parallel agents where work does not interfere. Because every agent shares the one open Editor, only Editor-free rules code could run in parallel.
+- Rejected (and why): TODO: check each line and add my reasons.
+  - Using the new sprite sheets in F01: I kept placeholder shapes for the prototype and left the sheets for F08.
+  - Enemies the player can walk through (the AI's recommendation): I wanted solid enemies.
+  - A lane fixed from the start of the warning (the AI's recommendation).
+  - The open 24 × 12 arena with no obstacles (the AI's recommendation).
+  - Fully random obstacle positions: I chose random picks from hand-made layouts.
+  - An Esc pause panel or Esc-to-menu.
+- How I verified it: TODO: I must write this myself from checks I actually performed.
+- Time spent: TODO: mine to fill in.
+- Build status (updated by the AI as each feature finishes; nothing here is committed by the AI):
+  - F01 Movement and aim: built and reviewed by the AI. My own Play Mode test: TODO.
+  - F02 Dash attack and kill recharge: built and reviewed by the AI. The dash lives in `Assets/_Game/Scripts/Combat/` with `DashConfig.asset` and `DeathFadeConfig.asset`; four test dummies were added to `Arena.unity`. AI checks: 69 Edit Mode tests passed (29 from F01 plus 40 new), and the subagent measured all 13 criteria in Play Mode with injected input. Reported by the AI as not checked: a click on a letterbox bar, losing focus during a dash, and a real hand on the mouse. Reported differences: a dash into a wall stops at x = 11.495 (the same place walking rests, inside the 0.05 tolerance), and a dash aimed even slightly into a wall the player is touching is cut short by that wall. My own Play Mode test: TODO.
+  - F03 Hearts and damage protection: built and reviewed by the AI. `PlayerHealth` and `DamagesPlayerOnOverlap` in `Assets/_Game/Scripts/Combat/`, `HealthConfig.asset`, and an orange hazard zone in `Arena.unity`. The staged rules code was moved in with one fix by the build subagent (protection ended one frame late at exactly 60 fps because of float rounding). The subagent also changed two F02 files so that switching the dash off mid-dash is safe. AI checks: 112 Edit Mode tests passed, and the subagent measured all 9 criteria in Play Mode with injected input. Reported by the AI as not done: the real right-click "Restore Hearts" in the Inspector (the same method was called by script). Reported difference: the first hit lands at about x = −9.42, not −9.5, because walking moves in 0.12-unit physics steps. My own Play Mode test: TODO.
+  - F04 Charger and Turret: built and reviewed by the AI. Enemy code in `Assets/_Game/Scripts/Enemies/`, prefabs `Charger`, `Turret`, `Projectile` and a shared `Player` prefab in `Assets/_Game/Prefabs/`, `ChargerConfig.asset` and `TurretConfig.asset`. `Arena.unity` now holds one Charger at (6, 3) and one Turret at (6, −3); the dummies and the hazard zone moved to the new `Test_DashAndHearts.unity`. The build subagent changed two F02 files: the dash now sweeps its hit area every frame so it catches moving enemies, and `DashTarget` gained a "Counts As Kill" flag so a destroyed shot is not a kill. It also changed two details of the staged rules code (rest timing after a charge; "player on top of the Charger" now means the bodies overlap). AI checks: 217 Edit Mode tests passed; the subagent measured all 18 criteria in Play Mode with injected input; the orchestrator re-ran the tests and looked at captures of the lane and the ring. Reported by the AI as not checked live: spawning an enemy from a prefab with a delayed start (the path F05 uses) and the dash against a Charger at uneven real frame times. Reported observation: a player pressed against the Turret when its ring closes is hit by the point-blank shot. Left over: `DashHitQueue.cs` and its tests are no longer used by the dash. My own Play Mode test: TODO.
+  - F05 Arena and three fixed waves: spec written; rules code drafted outside the project; build in progress.
+  - F06 Menus and endings: spec written; build not started.
+  - F07 Basic HUD and Windows build: spec written; build not started.
