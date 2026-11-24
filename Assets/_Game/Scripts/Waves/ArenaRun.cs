@@ -27,7 +27,8 @@ namespace Dashblade.Waves
     /// <para>
     /// Deaths come from each enemy's <see cref="DashTarget.Killed"/> event and defeat from
     /// <see cref="PlayerHealth.Defeated"/>; both are handled inside the frame they happen. The timers run after the
-    /// player, the dash and the damage sources, so a wave spawned or started this frame is first updated next frame.
+    /// player, the dash and the damage sources, so a wave spawned or started this frame is first updated next frame,
+    /// and the Wave Pause after a clear counts from the frame after the clear.
     /// </para>
     /// <para>Freezing time (Time.timeScale = 0) freezes the run with everything else.</para>
     /// </remarks>
@@ -46,7 +47,7 @@ namespace Dashblade.Waves
 
         [SerializeField] private Turret turretPrefab;
 
-        [Tooltip("A 2 Ã— 2 solid square; placed once per pillar of the run's layout.")]
+        [Tooltip("A 2 × 2 solid square; placed once per pillar of the run's layout.")]
         [SerializeField] private GameObject pillarPrefab;
 
         [Tooltip("The wave being played or about to appear. Shown for checking; not editable.")]
@@ -72,6 +73,7 @@ namespace Dashblade.Waves
 
         private WaveRun run;
         private WaveDefinition[] waves;
+        private int clearFrame = -1;
 
         /// <summary>The wave being played or about to appear, 1-based (1 during the first pause).</summary>
         public int CurrentWave => run != null ? run.CurrentWave : 0;
@@ -126,6 +128,7 @@ namespace Dashblade.Waves
             run.FadeInFinished += OnFadeInFinished;
             run.ClearProjectilesRequested += ClearProjectiles;
             run.RestoreHeartsRequested += OnRestoreHeartsRequested;
+            run.WaveCleared += OnWaveCleared;
             run.CurrentWaveChanged += OnCurrentWaveChanged;
             run.VictoryReached += OnVictoryReached;
             run.DefeatReached += OnDefeatReached;
@@ -147,7 +150,13 @@ namespace Dashblade.Waves
 
         private void Update()
         {
-            run.Tick(Time.deltaTime);
+            // This frame's time passed before the wave was cleared (kills happen in the dash's and the enemies'
+            // Updates, which run first), so the Wave Pause starts counting on the next frame.
+            if (Time.frameCount != clearFrame)
+            {
+                run.Tick(Time.deltaTime);
+            }
+
             ApplyFade();
             ShowState();
         }
@@ -270,6 +279,11 @@ namespace Dashblade.Waves
         private void OnRestoreHeartsRequested()
         {
             player.RestoreHearts();
+        }
+
+        private void OnWaveCleared(int wave)
+        {
+            clearFrame = Time.frameCount;
         }
 
         private void OnPlayerDefeated()
