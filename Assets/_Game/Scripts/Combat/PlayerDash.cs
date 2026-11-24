@@ -80,11 +80,28 @@ namespace Dashblade.Combat
         /// <summary>Radius of the hit circle (half the config's Hit Width).</summary>
         public float HitRadius => config != null ? config.HitRadius : 0f;
 
+        /// <summary>
+        /// While true (the F11 pause), Update does nothing at all: a left-click is neither acted on nor remembered, and
+        /// a dash in progress stays where it is (still Kinematic, still invulnerable). When it turns false the dash
+        /// carries on along the same path. Unlike switching this component off, it never cancels a dash. Separate
+        /// from the walking and aim locks the dash itself sets.
+        /// </summary>
+        public bool IsPaused { get; set; }
+
         /// <summary>Raised with the new value whenever <see cref="IsReady"/> changes.</summary>
         public event Action<bool> ReadinessChanged
         {
             add => rules.ReadinessChanged += value;
             remove => rules.ReadinessChanged -= value;
+        }
+
+        /// <summary>
+        /// Starts the Start Lockout again from now, counted in game time (F11: after the pause panel's Resume button).
+        /// Left-clicks are dropped meanwhile; readiness, walking and aim are not affected.
+        /// </summary>
+        public void RestartStartLockout()
+        {
+            startLockout?.Restart();
         }
 
         private void Awake()
@@ -106,6 +123,12 @@ namespace Dashblade.Combat
 
         private void Update()
         {
+            if (IsPaused)
+            {
+                // Game time does not move while paused, so skipping the clocks loses nothing.
+                return;
+            }
+
             Mouse mouse = Mouse.current;
             bool clicked = mouse != null && mouse.leftButton.wasPressedThisFrame;
             bool wasDashing = rules.State == DashState.Dashing;

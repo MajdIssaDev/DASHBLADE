@@ -91,6 +91,71 @@ namespace Dashblade.Tests.EditMode
             Assert.That(lockout.IsLocked, Is.False);
         }
 
+        // F11: the pause panel's Resume button starts the lockout again.
+        [Test]
+        public void Restart_AfterTheLockoutIsOver_LocksForTheFullDurationAgain()
+        {
+            var lockout = new DashStartLockout(Lockout);
+            lockout.Tick(3f);
+            Assert.That(lockout.IsLocked, Is.False);
+
+            lockout.Restart();
+            Assert.That(lockout.Elapsed, Is.EqualTo(0f));
+            Assert.That(lockout.IsLocked, Is.True);
+
+            lockout.Tick(0.4f);
+            Assert.That(lockout.IsLocked, Is.True, "0.4 s after the restart");
+            lockout.Tick(0.1f);
+            Assert.That(lockout.IsLocked, Is.False, "0.5 s after the restart");
+        }
+
+        [Test]
+        public void Restart_DuringTheLockout_CountsTheFullDurationFromTheRestart()
+        {
+            var lockout = new DashStartLockout(Lockout);
+            lockout.Tick(0.3f);
+            lockout.Restart();
+            lockout.Tick(0.3f);
+            Assert.That(lockout.IsLocked, Is.True, "Only 0.3 s since the restart.");
+            lockout.Tick(0.2f);
+            Assert.That(lockout.IsLocked, Is.False);
+        }
+
+        [Test]
+        public void Restart_ThirtyFramesOfOneSixtieth_EndItOnTheThirtiethFrame()
+        {
+            var lockout = new DashStartLockout(Lockout);
+            lockout.Tick(1f);
+            lockout.Restart();
+            for (int frame = 1; frame <= 30; frame++)
+            {
+                lockout.Tick(1f / 60f);
+                Assert.That(lockout.IsLocked, Is.EqualTo(frame < 30), $"frame {frame}");
+            }
+        }
+
+        [Test]
+        public void Restart_FrozenTimeDoesNotCount()
+        {
+            var lockout = new DashStartLockout(Lockout);
+            lockout.Tick(1f);
+            lockout.Restart();
+            for (int frame = 0; frame < 100; frame++)
+            {
+                lockout.Tick(0f);
+            }
+
+            Assert.That(lockout.IsLocked, Is.True);
+        }
+
+        [Test]
+        public void Restart_WithNoLockout_StaysUnlocked()
+        {
+            var lockout = new DashStartLockout(0f);
+            lockout.Restart();
+            Assert.That(lockout.IsLocked, Is.False);
+        }
+
         [Test]
         public void TheLockoutDoesNotChangeTheDashsReadiness()
         {

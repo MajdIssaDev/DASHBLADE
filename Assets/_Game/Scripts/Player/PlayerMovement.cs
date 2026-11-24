@@ -24,6 +24,13 @@ namespace Dashblade.Player
         /// </summary>
         public bool IsLocked { get; set; }
 
+        /// <summary>
+        /// While true (the F11 pause), walking input is ignored and the Rigidbody2D is left alone, exactly as while
+        /// <see cref="IsLocked"/>; when both are false again the next Update applies the held keys at once. Separate
+        /// from <see cref="IsLocked"/>, which the dash owns, so a pause during a dash never unlocks walking early.
+        /// </summary>
+        public bool IsPaused { get; set; }
+
         private void Awake()
         {
             body = GetComponent<Rigidbody2D>();
@@ -52,7 +59,7 @@ namespace Dashblade.Player
                 }
             }
 
-            if (IsLocked)
+            if (IsLocked || IsPaused)
             {
                 // Forget the pre-lock velocity, so the first unlocked frame always applies the held keys.
                 desiredVelocity = Vector2.zero;
@@ -70,7 +77,7 @@ namespace Dashblade.Player
 
         private void FixedUpdate()
         {
-            if (IsLocked)
+            if (IsLocked || IsPaused)
             {
                 return;
             }

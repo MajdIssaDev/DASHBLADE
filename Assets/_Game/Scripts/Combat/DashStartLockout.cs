@@ -37,5 +37,14 @@ namespace Dashblade.Combat
                 Elapsed += deltaTime;
             }
         }
+
+        /// <summary>
+        /// Starts the lockout again from zero, whether or not it was over (F11: the pause panel's Resume button, so the
+        /// second press of a double-click on it does not dash). Like the first lockout it leaves readiness alone.
+        /// </summary>
+        public void Restart()
+        {
+            Elapsed = 0f;
+        }
     }
 }

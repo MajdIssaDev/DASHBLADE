@@ -26,6 +26,13 @@ namespace Dashblade.Player
         /// </summary>
         public bool IsLocked { get; set; }
 
+        /// <summary>
+        /// While true (the F11 pause), the cursor is ignored and the body keeps its rotation, exactly as while
+        /// <see cref="IsLocked"/>; when both are false again the next Update snaps the facing to the cursor. Separate
+        /// from <see cref="IsLocked"/>, which the dash owns.
+        /// </summary>
+        public bool IsPaused { get; set; }
+
         private void Awake()
         {
             if (config == null)
@@ -47,7 +54,7 @@ namespace Dashblade.Player
 
         private void Update()
         {
-            if (IsLocked)
+            if (IsLocked || IsPaused)
             {
                 return;
             }
