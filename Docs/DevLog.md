@@ -98,3 +98,41 @@ The entry below records this planning session. I confirmed that this is Session 
 - Rejected (and why): I did not explicitly reject a new AI suggestion during this session. I had already excluded features such as multiplayer, bosses and upgrades to keep the project manageable.
 - How I verified it: I read the files and checked that they matched my game idea.
 - Time spent: I spent 1 hour on this planning session. I already had the game idea beforehand.
+
+## 2026-11-24 · Session 2 · Unity 6.3 LTS project setup and CLAUDE.md
+- Goal: Review Lesson 1–6 and Home Assignment 02 requirements, install the Lesson 4 context-kit, set up the DASHBLADE Unity 6.3 LTS project connected to the existing HW1 GitHub repository, verify Unity CLI Editor connectivity, and write the initial `CLAUDE.md`.
+- Model: Gemini 4 Neon (in Antigravity).
+- Key prompts:
+  - "Role:
+You are a disciplined Unity 6 developer helping me set up my solo semester project (DASHBLADE) for the AI Driven Development course.
+
+Context:
+- My Unity 6.3 LTS (6000.3.29f1) Universal 2D project with com.unity.pipeline is at E:\AIForGames\DASHBLADE.
+- My existing HW1 GitHub repository is https://github.com/MajdIssaDev/DASHBLADE.git (containing Docs/HLD.md, Docs/Backlog.md, and Docs/DevLog.md).
+- My course materials are in the uploaded Class Materials zip (lesson03/unity-kit and lesson04/context-kit).
+- I am working in Manual mode and keep this project completely separate from any other folders on my PC (do not touch ROBLOXPROJECT or E:\AIForGames\HW1).
+
+Task:
+1. Extract lesson04/context-kit to E:\AIForGames\lesson04\context-kit\.
+2. Copy .gitignore and .claude/settings.json from lesson03/unity-kit into E:\AIForGames\DASHBLADE\, add .vscode/ to .gitignore, and copy SPEC-template.md into E:\AIForGames\DASHBLADE\Docs\Specs\.
+3. Link E:\AIForGames\DASHBLADE to origin/main (https://github.com/MajdIssaDev/DASHBLADE.git) preserving my HW1 commit history and Docs/ files without overwriting any Unity files.
+4. Open E:\AIForGames\DASHBLADE in Unity Editor via the Unity CLI until `unity status` reports `ready`, then inspect (read-only) the Unity version, render pipeline, activeInputHandler setting, open scene hierarchy, and Console errors/warnings.
+5. Draft E:\AIForGames\DASHBLADE\CLAUDE.md from CLAUDE-template.md using only verified Unity facts and decisions that cannot be found by reading code.
+
+Constraints:
+- Never touch any file outside E:\AIForGames\DASHBLADE and E:\AIForGames\lesson04\ (reason: keep other projects isolated and HW1 untouched as a backup).
+- Never commit or push — I own every commit and push in this course.
+- Never edit .unity, .prefab, or .asset files as text.
+- Keep CLAUDE.md under 60 lines (~1 screen), include verified Unity 6.3 API notes, include zero secrets, and mark every architectural or convention decision I haven't confirmed yet with [?].
+- If Unity stops at a dialog (software terms, firewall, or URP upgrade), pause and tell me to click it instead of retrying.
+
+Done means (output format):
+1. A short status table showing: Unity CLI status, open scene hierarchy, Console error/warning count, and `git status --short` (confirming Library/, Logs/, UserSettings/, and .vscode/ are ignored).
+2. A numbered list of every [?] decision in CLAUDE.md for me to approve, change, or cut before you remove the [?] tags.
+3. No code files created yet — stop after the CLAUDE.md draft so I can review it, update Docs/DevLog.md, and make the commit myself."
+- What the AI produced: Extracted the Lesson 4 `context-kit` into `E:\AIForGames\lesson04\context-kit\`, installed `.gitignore` and `.claude/settings.json` from `lesson03/unity-kit` and `Docs/Specs/SPEC-template.md`, linked `E:\AIForGames\DASHBLADE` to `MajdIssaDev/DASHBLADE` (`origin/main`) with HW1 `Docs/` intact, checked the live Unity Editor (`6000.3.29f1`, URP 2D, Input System only, `SampleScene`, 0 console errors), and wrote `CLAUDE.md`.
+- Accepted: Kept `E:\AIForGames\DASHBLADE` as the single semester repository linked to HW1's GitHub repo, approved the drafted `CLAUDE.md` architecture and convention rules, and added `.vscode/` to `.gitignore`.
+- Changed (and why): Stopped the agent from working inside the unrelated workspace (for another personal project) and directed all course work to `E:\AIForGames\DASHBLADE`.
+- Rejected (and why): Deferred installing `unity setup antigravity` for now; kept commits, pushes, and Unity terms acceptance manual.
+- How I verified it: Reading CLAUDE.md, confirming HW1's Docs/ are in E:\AIForGames\DASHBLADE\Docs\, enabling main branch protection on GitHub, and running git status before committing to confirm Library/, Logs/, UserSettings/, and .vscode/ are ignored
+- Time spent: around 1 hour
