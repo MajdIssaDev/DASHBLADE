@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Dashblade.Combat
 {
     /// <summary>
-    /// Tuning numbers for the player's dash (F02). The asset lives at Assets/_Game/Config/DashConfig.asset.
+    /// Tuning numbers for the player's dash (F02; Start Lockout from F06 criterion 14). The asset lives at Assets/_Game/Config/DashConfig.asset.
     /// </summary>
     [CreateAssetMenu(fileName = "DashConfig", menuName = "Dashblade/Dash Config")]
     public sealed class DashConfig : ScriptableObject
@@ -24,10 +24,15 @@ namespace Dashblade.Combat
         [Min(0f)]
         [SerializeField] private float hitWidth = 1.25f;
 
+        [Tooltip("Seconds at the start of every run, counted from the first frame the run is shown, during which a left-click does not start a dash (it is dropped, not saved for later). The dash still shows as ready. 0 means no lockout.")]
+        [Min(0f)]
+        [SerializeField] private float startLockout = 0.5f;
+
         public float Distance => distance;
         public float Duration => duration;
         public float MissCooldown => missCooldown;
         public float HitWidth => hitWidth;
         public float HitRadius => hitWidth * 0.5f;
+        public float StartLockout => startLockout;
     }
 }

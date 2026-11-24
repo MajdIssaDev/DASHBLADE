@@ -22,6 +22,9 @@ namespace Dashblade.Combat
         // Treating a remainder this small as zero keeps the dash and cooldown from ending a frame late.
         private const float TimeEpsilon = 1e-5f;
 
+        // The full length of the running cooldown (the Miss Cooldown passed in), for RechargeProgress only.
+        private float cooldownLength;
+
         public DashState State { get; private set; } = DashState.Ready;
 
         public bool IsReady => State == DashState.Ready;
@@ -41,6 +44,27 @@ namespace Dashblade.Combat
         public float CooldownRemaining { get; private set; }
 
         public bool KilledThisDash { get; private set; }
+
+        /// <summary>
+        /// How far the dash has recharged, from 0 to 1 (read by the F07 HUD's dash bar): 1 while Ready, 0 while
+        /// Dashing, and during Cooldown the share of the cooldown already passed, rising linearly to exactly 1 on the
+        /// moment the state turns Ready. Read-only; it changes nothing.
+        /// </summary>
+        public float RechargeProgress
+        {
+            get
+            {
+                switch (State)
+                {
+                    case DashState.Dashing:
+                        return 0f;
+                    case DashState.Cooldown:
+                        return cooldownLength > 0f ? Mathf.Clamp01(1f - CooldownRemaining / cooldownLength) : 1f;
+                    default:
+                        return 1f;
+                }
+            }
+        }
 
         /// <summary>Distance covered so far along the current dash's path; exactly <see cref="PathLength"/> once time is up.</summary>
         public float Travelled
@@ -147,6 +171,7 @@ namespace Dashblade.Combat
             }
 
             CooldownRemaining = missCooldown - overshoot;
+            cooldownLength = missCooldown;
             if (CooldownRemaining <= TimeEpsilon)
             {
                 CooldownRemaining = 0f;
@@ -180,6 +205,7 @@ namespace Dashblade.Combat
             else
             {
                 CooldownRemaining = missCooldown;
+                cooldownLength = missCooldown;
                 SetState(DashState.Cooldown);
             }
 

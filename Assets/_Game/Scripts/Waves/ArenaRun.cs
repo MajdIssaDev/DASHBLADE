@@ -30,6 +30,10 @@ namespace Dashblade.Waves
     /// player, the dash and the damage sources, so a wave spawned or started this frame is first updated next frame,
     /// and the Wave Pause after a clear counts from the frame after the clear.
     /// </para>
+    /// <para>
+    /// The timers run on game time counted from the first frame the run is shown (<see cref="RunClock"/>), so the
+    /// time spent loading the scene never shortens the first Wave Pause.
+    /// </para>
     /// <para>Freezing time (Time.timeScale = 0) freezes the run with everything else.</para>
     /// </remarks>
     [DisallowMultipleComponent]
@@ -70,6 +74,7 @@ namespace Dashblade.Waves
         private readonly List<Action> pendingStarts = new List<Action>();
         private readonly List<Projectile> shots = new List<Projectile>();
         private readonly List<SpriteRenderer> spriteBuffer = new List<SpriteRenderer>();
+        private readonly RunClock clock = new RunClock();
 
         private WaveRun run;
         private WaveDefinition[] waves;
@@ -150,11 +155,15 @@ namespace Dashblade.Waves
 
         private void Update()
         {
+            // Game time counted from the first frame the run is shown: loading the scene is not part of the first
+            // Wave Pause (F06). Stepped every frame, so the clock never falls behind.
+            float step = clock.Step(Time.timeAsDouble);
+
             // This frame's time passed before the wave was cleared (kills happen in the dash's and the enemies'
             // Updates, which run first), so the Wave Pause starts counting on the next frame.
             if (Time.frameCount != clearFrame)
             {
-                run.Tick(Time.deltaTime);
+                run.Tick(step);
             }
 
             ApplyFade();

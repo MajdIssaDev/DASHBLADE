@@ -14,7 +14,9 @@ namespace Dashblade.Combat
     /// and every <see cref="DashTarget"/> it touches is destroyed, so targets that moved onto the path after the click
     /// are caught too. Things that move themselves (a charging Charger, a projectile) also check their own movement
     /// against the hit circle and call <see cref="TryStrike"/>. Collision callbacks are not used, so nothing can be
-    /// skipped at any speed or frame rate. The rules live in <see cref="DashRules"/>.
+    /// skipped at any speed or frame rate. The rules live in <see cref="DashRules"/>. For the config's Start Lockout
+    /// after the first frame the run is shown, a left-click is dropped (<see cref="DashStartLockout"/>, timed by a
+    /// <see cref="RunClock"/>); the dash still counts as ready meanwhile.
     /// </summary>
     /// <remarks>
     /// During the dash the Rigidbody2D is Kinematic and is placed on the path each frame: a kinematic body gets no
@@ -42,6 +44,7 @@ namespace Dashblade.Combat
         [SerializeField] private bool invulnerable;
 
         private readonly DashRules rules = new DashRules();
+        private readonly RunClock runClock = new RunClock();
         private readonly List<RaycastHit2D> castHits = new List<RaycastHit2D>();
         private readonly List<Collider2D> overlapHits = new List<Collider2D>();
 
@@ -49,6 +52,7 @@ namespace Dashblade.Combat
         private Collider2D bodyCollider;
         private PlayerMovement movement;
         private PlayerAim aim;
+        private DashStartLockout startLockout;
         private DashPath path;
         private Vector2 lastSweepPoint;
 
@@ -62,6 +66,13 @@ namespace Dashblade.Combat
 
         /// <summary>True from the frame a dash starts to the frame it ends: the hit circle is live.</summary>
         public bool IsDashing => rules.State == DashState.Dashing;
+
+        /// <summary>
+        /// How far the dash has recharged, 0 to 1: 1 while ready, 0 during the dash, rising over the miss cooldown to
+        /// exactly 1 on the frame <see cref="IsReady"/> turns true (see <see cref="DashRules.RechargeProgress"/>).
+        /// Read-only; the HUD's dash bar reads it.
+        /// </summary>
+        public float RechargeProgress => rules.RechargeProgress;
 
         /// <summary>Centre of the hit circle this frame (the body's centre).</summary>
         public Vector2 HitCentre => body != null ? body.position : (Vector2)transform.position;
@@ -87,7 +98,10 @@ namespace Dashblade.Combat
             {
                 Debug.LogError($"{nameof(PlayerDash)} on '{name}' has no {nameof(DashConfig)} assigned.", this);
                 enabled = false;
+                return;
             }
+
+            startLockout = new DashStartLockout(config.StartLockout);
         }
 
         private void Update()
@@ -96,6 +110,8 @@ namespace Dashblade.Combat
             bool clicked = mouse != null && mouse.leftButton.wasPressedThisFrame;
             bool wasDashing = rules.State == DashState.Dashing;
 
+            // The Start Lockout counts from the first frame the run is shown, as ArenaRun's first Wave Pause does.
+            startLockout.Tick(runClock.Step(Time.timeAsDouble));
             rules.Tick(Time.deltaTime);
 
             if (wasDashing)
@@ -103,8 +119,9 @@ namespace Dashblade.Combat
                 // A click during the dash is ignored and not remembered, even if this frame ends the dash.
                 StepDash();
             }
-            else if (clicked && rules.IsReady)
+            else if (clicked && rules.IsReady && !startLockout.IsLocked)
             {
+                // A click during the Start Lockout is dropped, not remembered: only a new press after it dashes.
                 BeginDash();
             }
 

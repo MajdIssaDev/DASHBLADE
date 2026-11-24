@@ -3,6 +3,7 @@
     "rootNamespace": "Dashblade.Tests",
     "references": [
         "Dashblade",
+        "Dashblade.UI",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

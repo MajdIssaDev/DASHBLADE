@@ -21,6 +21,7 @@ Everything from F01–F05 still holds. Menus are operated with the mouse only. "
 11. **Menus are letterboxed too.** Starting state: Game view set to 1024 × 768; main menu in Play Mode. Action: look, then click Play. I see: black bars above and below a 16:9 picture that holds the whole menu, laid out as at 1920 × 1080 but smaller; the Play button responds where it is drawn.
 12. **Tuning lives in a config asset.** Starting state: not in Play Mode. `Assets/_Game/Config/EndingConfig.asset` shows Ending Delay = 1 and Dim Strength = 0.7. Action: set Ending Delay to 4, start a run from the Arena scene, lose all three hearts. I see: the defeat panel appears 4 seconds after the last heart was lost. (Set it back to 1.)
 13. **The Arena scene still starts on its own.** Starting state: `Arena.unity` open (not the menu). Action: enter Play Mode and play to an ending; click Menu. I see: the run starts directly as in F05; the ending panel appears as above; Menu loads the main menu.
+14. **A double-click on Play does not dash.** Starting state: main menu showing. Action: double-click Play (two presses less than 0.5 seconds apart). I see: the Arena scene loads once; the player stands at (−14.5, 0) with the nose red (dash ready) and has not dashed; a left-click made more than 0.5 seconds after the run appears dashes as normal. The same holds for a double-click on Retry.
 
 ## Edge cases
 
@@ -30,6 +31,8 @@ Everything from F01–F05 still holds. Menus are operated with the mouse only. "
 - **Leaving a panel always unfreezes:** after Retry or Menu the next scene runs at normal speed. A run started from the menu after an ending must never begin frozen.
 - **The click that presses a button never dashes:** not on the frozen run behind a panel, and not on the first frame of the new run.
 - **Clicking twice quickly, or two buttons in a row:** only the first click counts.
+- **Double-click on Play or Retry (decided after the first build, 2026-11-24):** left-clicks are ignored by the dash for the first 0.5 seconds of every run, so the second press of a double-click that lands in the new run does not dash. Walking and aiming work from the first frame. The click is dropped, not saved for later: after 0.5 seconds a new click dashes as normal. The number is Start Lockout = 0.5 in `Assets/_Game/Config/DashConfig.asset`.
+- **Loading time is not game time (decided after the first build, 2026-11-24):** the 2-second pause before wave 1 and the 0.5-second Start Lockout both count from the first frame the new run is shown, not from the moment the scene started loading. Wave 1 fades in 2.0 seconds after that first frame.
 - **Clicking the panel or the dark area outside the buttons:** nothing happens.
 - **Keyboard:** no key activates, selects or moves between buttons (not Enter, Space, Tab or the arrow keys), including just after a button was clicked. WASD on the main menu does nothing.
 - **Window resized or not 16:9:** the menu and panels stay inside the 16:9 picture and scale with it.

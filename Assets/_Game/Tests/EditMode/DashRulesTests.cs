@@ -301,6 +301,149 @@ namespace Dashblade.Tests.EditMode
             Assert.That(rules.CooldownRemaining, Is.EqualTo(0.7f).Within(Tolerance), "a running cooldown is not reset");
         }
 
+        // ---- Recharge progress (read by the F07 HUD's dash bar)
+
+        [Test]
+        public void RechargeProgress_FullWhileReady()
+        {
+            var rules = new DashRules();
+            Assert.That(rules.RechargeProgress, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void RechargeProgress_EmptyForTheWholeDash()
+        {
+            DashRules rules = StartedFullDash();
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0f));
+            rules.Tick(0.1f);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0f));
+            rules.Tick(0.05f);
+            Assert.That(rules.IsDashComplete, Is.True);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0f), "still dashing until EndDash");
+        }
+
+        [Test]
+        public void RechargeProgress_Miss_RefillsLinearlyOverTheCooldown_FullWhenReady()
+        {
+            DashRules rules = StartedFullDash();
+            rules.Tick(0.15f);
+            rules.EndDash(MissCooldown);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0f).Within(Tolerance), "empty when the dash ends");
+
+            rules.Tick(0.25f);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0.25f).Within(Tolerance));
+            rules.Tick(0.25f);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0.5f).Within(Tolerance), "half full 0.5 s after the dash ends");
+            rules.Tick(0.49f);
+            Assert.That(rules.IsReady, Is.False);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0.99f).Within(Tolerance));
+            Assert.That(rules.RechargeProgress, Is.LessThan(1f));
+
+            rules.Tick(0.02f);
+            Assert.That(rules.IsReady, Is.True);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void RechargeProgress_Kill_FullTheMomentTheDashEnds()
+        {
+            DashRules rules = StartedFullDash();
+            rules.RegisterKill();
+            RunToEnd(rules);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0f));
+
+            rules.EndDash(MissCooldown);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void RechargeProgress_FrameOvershootCountsTowardsTheRefill()
+        {
+            DashRules rules = StartedFullDash();
+            rules.Tick(0.2f); // The dash's time ran out 0.05 s into this frame.
+            rules.EndDash(MissCooldown);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0.05f).Within(Tolerance));
+        }
+
+        [Test]
+        public void RechargeProgress_ReachesOneOnTheFrameItTurnsReady_AtSixtyFps()
+        {
+            DashRules rules = StartedFullDash();
+            RunToEnd(rules);
+            rules.EndDash(MissCooldown);
+
+            float previous = rules.RechargeProgress;
+            while (!rules.IsReady)
+            {
+                rules.Tick(1f / 60f);
+                float now = rules.RechargeProgress;
+                Assert.That(now, Is.GreaterThanOrEqualTo(previous), "never goes backwards");
+                Assert.That(now == 1f, Is.EqualTo(rules.IsReady), "full exactly when ready, not before");
+                previous = now;
+            }
+        }
+
+        [Test]
+        public void RechargeProgress_FollowsTheCooldownLengthPassed()
+        {
+            DashRules rules = StartedFullDash();
+            rules.Tick(0.15f);
+            rules.EndDash(4f);
+            rules.Tick(1f);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0.25f).Within(Tolerance));
+            rules.Tick(2f);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0.75f).Within(Tolerance));
+        }
+
+        [Test]
+        public void RechargeProgress_ZeroLengthMiss_EmptiesAndRefills()
+        {
+            var rules = new DashRules();
+            rules.TryStartDash(0f, 0f);
+            rules.EndDash(MissCooldown);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0f));
+            rules.Tick(0.5f);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0.5f).Within(Tolerance));
+        }
+
+        [Test]
+        public void RechargeProgress_CancelledMiss_RefillsOverTheFullCooldown()
+        {
+            DashRules rules = StartedFullDash();
+            rules.Tick(0.05f);
+            rules.CancelDash(MissCooldown);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0f));
+            rules.Tick(0.5f);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(0.5f).Within(Tolerance));
+        }
+
+        [Test]
+        public void RechargeProgress_ZeroMissCooldown_FullAtOnce()
+        {
+            DashRules rules = StartedFullDash();
+            RunToEnd(rules);
+            rules.EndDash(0f);
+            Assert.That(rules.IsReady, Is.True);
+            Assert.That(rules.RechargeProgress, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void RechargeProgress_ReadingItChangesNothing()
+        {
+            DashRules rules = StartedFullDash();
+            rules.Tick(0.15f);
+            rules.EndDash(MissCooldown);
+            rules.Tick(0.3f);
+            float remaining = rules.CooldownRemaining;
+            for (int i = 0; i < 5; i++)
+            {
+                _ = rules.RechargeProgress;
+            }
+
+            Assert.That(rules.CooldownRemaining, Is.EqualTo(remaining));
+            Assert.That(rules.State, Is.EqualTo(DashState.Cooldown));
+        }
+
         [Test]
         public void ZeroOrNegativeDeltaTime_ChangesNothing()
         {

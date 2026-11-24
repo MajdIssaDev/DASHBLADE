@@ -16,3 +16,4 @@ MonoBehaviour:
   duration: 0.15
   missCooldown: 1
   hitWidth: 1.25
+  startLockout: 0.5
